@@ -19,6 +19,7 @@ def interceptionByDown(regularSeasonStatsFinal):
     interceptionData = [firstDownNumber, secondDownNumber, thirdDownNumber, fourthDownNumber]
     labels = 'first down', 'second down', 'third down', 'fourth down' 
     plt.pie(interceptionData, labels=labels,autopct='%1.1f%%')
+    plt.title('QB Interception BreakDown by Down')
     plt.axis('equal')
     plt.show()
 
@@ -30,6 +31,7 @@ def interceptionByPassDepth(regularSeasonStatsFinal):
     interceptionData = [shortPassInterceptions, deepPassInterception]
     labels = 'Short Pass', 'Deep Pass'
     plt.pie(interceptionData, labels=labels,autopct='%1.1f%%')
+    plt.title('QB Interception BreakDown by Pass Depth')
     plt.axis('equal')
     plt.show()
 
@@ -51,8 +53,9 @@ def interceptionResultsWithRunGameEfficiency(regularSeasonStatsFinal, playsData,
     highRunGameInterceptions = regularSeasonStatsFinal[(regularSeasonStatsFinal["gameId"].isin(highRushYardAvg)) & (regularSeasonStatsFinal["passOutcomes"]=="interception")].shape[0]
 
     interceptionData = [lowRunGameInterceptions, highRunGameInterceptions]
-    labels = 'Low Run Game (< 3.5 yards avg)' , 'High Run Game (>3.5 yards avg)'
+    labels = '< 3.5 yards avg)' , '>3.5 yards avg)'
     plt.pie(interceptionData, labels=labels,autopct='%1.1f%%')
+    plt.title('QB Interception BreakDown by Running Efficiency')
     plt.axis('equal')
     plt.show()
 
@@ -81,29 +84,56 @@ def completionByDown(regularSeasonStatsFinal):
     plt.bar(x_pos, performance)
     
     plt.ylabel('Completion %')
-    plt.title('QB Completion Percentage')
+    plt.title('QB Completion Percentage by Down')
     plt.xticks(x_pos, x)
     
 def completionByPassDepth(regularSeasonStatsFinal):
-    totalFirstDownThrows = regularSeasonStatsFinal[regularSeasonStatsFinal["passDepth"]=="short"].shape[0]
-    firstDownCompletion = regularSeasonStatsFinal[(regularSeasonStatsFinal["passDepth"]=="short") & (regularSeasonStatsFinal["passOutcomes"]=="complete")].shape[0]
-    firstDownEfficiency = firstDownCompletion/totalFirstDownThrows
+    totalShortThrows = regularSeasonStatsFinal[regularSeasonStatsFinal["passDepth"]=="short"].shape[0]
+    shortCompletion = regularSeasonStatsFinal[(regularSeasonStatsFinal["passDepth"]=="short") & (regularSeasonStatsFinal["passOutcomes"]=="complete")].shape[0]
+    shortEfficiency = shortCompletion/totalShortThrows
 
-    totalScndDownThrows = regularSeasonStatsFinal[(regularSeasonStatsFinal["passDepth"]=="deep")].shape[0]
-    scndDownCompletion = regularSeasonStatsFinal[(regularSeasonStatsFinal["passDepth"]=="deep") & (regularSeasonStatsFinal["passOutcomes"]=="complete")].shape[0]
-    scndDownEfficiency = scndDownCompletion/totalScndDownThrows
+    totaldeepThrows = regularSeasonStatsFinal[(regularSeasonStatsFinal["passDepth"]=="deep")].shape[0]
+    deepCompletion = regularSeasonStatsFinal[(regularSeasonStatsFinal["passDepth"]=="deep") & (regularSeasonStatsFinal["passOutcomes"]=="complete")].shape[0]
+    deepEfficiency = deepCompletion/totaldeepThrows
     
     x = ['Short Pass', 'Deep Pass']
-    performance = [firstDownEfficiency * 100, scndDownEfficiency * 100]  
+    performance = [shortEfficiency * 100, deepEfficiency * 100]  
     x_pos = [i for i, _ in enumerate(x)]
     plt.bar(x_pos, performance)
     
     plt.ylabel('Completion %')
-    plt.title('QB Completion Percentage')
+    plt.title('QB Completion Percentage By Pass Depth')
     plt.xticks(x_pos, x)
     
 
+def completionResultsWithRunGameEfficiency(regularSeasonStatsFinal, playsData, gameid):
+    lowRushYardAvg = []
+    highRushYardAvg = []
 
+    for gamestr in gameid:
+        runsPerGame = playsData[(playsData["gameId"]==gamestr) & (playsData["playType"]=="rush") & (playsData["possessionTeamId"].isin(regularSeasonStatsFinal["teamId"].unique()))]
+        runningPlays =runsPerGame.shape[0]
+        totalRushYards = runsPerGame["netYards"].sum()
+        rushAvg = totalRushYards/runningPlays 
+
+        if(rushAvg<3.5):     
+            lowRushYardAvg.append(gamestr)
+        else:
+            highRushYardAvg.append(gamestr)  
+    totalThrows = regularSeasonStatsFinal[(regularSeasonStatsFinal["passOutcomes"] != "sack")].shape[0]
+    completedPassesLowRush = regularSeasonStatsFinal[(regularSeasonStatsFinal["gameId"].isin(lowRushYardAvg)) & (regularSeasonStatsFinal["passOutcomes"]=="complete")].shape[0]
+    completedPassesHighRush = regularSeasonStatsFinal[(regularSeasonStatsFinal["gameId"].isin(highRushYardAvg)) & (regularSeasonStatsFinal["passOutcomes"]=="complete")].shape[0]
+    lowRushEfficiency = completedPassesLowRush/totalThrows
+    highRushEfficiency =completedPassesHighRush/totalThrows
+    
+    x = ['Low Run Game', 'High Run Game']
+    performance = [lowRushEfficiency * 100, highRushEfficiency * 100]  
+    x_pos = [i for i, _ in enumerate(x)]
+    plt.bar(x_pos, performance)
+    
+    plt.ylabel('Completion %')
+    plt.title('QB Completion Percentage by Run Efficiency')
+    plt.xticks(x_pos, x)
 
 
 
@@ -111,7 +141,7 @@ def main():
     #Data files used
     playerCSV = "D://programming//envs//Fun_place//QB_analysys//players//players.csv"
     passerCSV = "D://programming//envs//Fun_place//QB_analysys//passer//passer.csv"
-    playsCSV = "D://programming//envs//Fun_place//QB_analysys//plays//plays.csv"
+    playsCSV = "D://programming//envs//Fun_place//QB_analysys//plays//plays2//plays.csv"
     gamesCSV = "D://programming//envs//Fun_place//QB_analysys//games.csv"
     
     firstName = input("Please enter QB's first Name. ")
@@ -144,7 +174,7 @@ def main():
     while True:
         firstPrompt = input("Would you like to see QB's 1. Interception efficiency 2. Completion Efficency? (Select 1 or 2) ")
         if firstPrompt=="1":
-            secondPrompt = input("Interception efficiency 1. Based on Down? 2. Based on pass depth? 3. Based on run game efficiency? (Select 1,2,3) ")
+            secondPrompt = input("Interception efficiency based on 1.  Down? 2. Pass Depth? 3. Run game efficiency? (Select 1,2,3) ")
             if secondPrompt == "1":
                 interceptionByDown(regularSeasonStatsFinal)
             elif secondPrompt == "2":
@@ -154,11 +184,18 @@ def main():
             else:
                 print("Wrong input selected")
         elif firstPrompt=="2":
-            secondPrompt = input("Completion Efficency based on 1. Down? 2. Pass Depth (Select 1 or 2) ")
+            secondPrompt = input("Completion Efficency based on 1. Down? 2. Pass Depth? 3. Run game efficiency? (Select 1,2,3) ")
             if secondPrompt == "1":
                 completionByDown(regularSeasonStatsFinal)
             elif secondPrompt == "2":
                 completionByPassDepth(regularSeasonStatsFinal)
+            elif secondPrompt == "3":
+                completionResultsWithRunGameEfficiency(regularSeasonStatsFinal, playsData, gameid)
+            else:
+                print("Wrong input selected")
+        else:
+            print("Wrong input selected")
+        break
         
 if __name__== "__main__":
    main() 
