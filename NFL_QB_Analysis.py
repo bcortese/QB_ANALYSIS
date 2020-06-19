@@ -7,8 +7,34 @@ Created on Wed May 13 22:01:20 2020
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from tkinter import *
+
+root = Tk()
+root.title('QB Analysis')
+root.geometry("400x250")
+
+#Get players first and last name
+labelFirstName = Label(root, text="First Name:").place(x=10, y=40) 
+firstName = StringVar()
+entryFirstName = Entry(root, textvariable=firstName, width=25, bg="white").place(x=150, y=40) 
+
+#Get players first and last name
+labelLastName = Label(root, text="Last Name:").place(x=10, y=60) 
+lastName = StringVar()
+entryLastName = Entry(root, textvariable=lastName, width=25, bg="white").place(x=150, y=60) 
+
+efficiencyDropDown = StringVar()
+efficiencyDropDown.set("Interception efficiency")
+
+efficiencyDropDownList = OptionMenu(root, efficiencyDropDown, "Interception efficiency", "Completion Efficency")
+efficiencyDropDownList.place(x = 50, y = 100)
 
 
+efficiencyDropDownTwo = StringVar()
+efficiencyDropDownTwo.set("Down")
+
+efficiencyDropDownListTwo = OptionMenu(root, efficiencyDropDownTwo, "Down",  "Pass Depth", "Run game efficiency")
+efficiencyDropDownListTwo.place(x = 250, y = 100)
 
 def interceptionByDown(regularSeasonStatsFinal):
     firstDownNumber = regularSeasonStatsFinal[(regularSeasonStatsFinal["down"]==1) & (regularSeasonStatsFinal["passOutcomes"]=="interception")].shape[0]
@@ -144,13 +170,11 @@ def main():
     playsCSV = "D://programming//envs//Fun_place//QB_analysys//plays//plays2//plays.csv"
     gamesCSV = "D://programming//envs//Fun_place//QB_analysys//games.csv"
     
-    firstName = input("Please enter QB's first Name. ")
-    lastName = input("Please enter QB's last Name. ")
     #Retrieve searched players unique id
     playerData = pd.read_csv(playerCSV, engine='python')
-    chosenPlayer= playerData[(playerData['nameFirst']==firstName.strip()) & (playerData["nameLast"]==lastName.strip())]
+    chosenPlayer= playerData[(playerData['nameFirst']==firstName.get().strip()) & (playerData["nameLast"]==lastName.get().strip())]
     if chosenPlayer.empty:
-        print("Selected player not found!")
+        messagebox.showwarning(title="Wrong Input", message="Invalid Player, no player found")
         return
     playerId = chosenPlayer["playerId"].to_string(index=False).strip()
     
@@ -172,33 +196,31 @@ def main():
     regularSeasonStatsFinal.to_csv('output_CSV.csv', index=False)
     
     while True:
-        firstPrompt = input("Would you like to see QB's 1. Interception efficiency 2. Completion Efficency? (Select 1 or 2) ")
-        if firstPrompt=="1":
-            secondPrompt = input("Interception efficiency based on 1.  Down? 2. Pass Depth? 3. Run game efficiency? (Select 1,2,3) ")
-            if secondPrompt == "1":
+        if efficiencyDropDown.get()=="Interception efficiency":
+            if efficiencyDropDownTwo.get() == "Down":
                 interceptionByDown(regularSeasonStatsFinal)
-            elif secondPrompt == "2":
+            elif efficiencyDropDownTwo.get() == "Pass Depth":
                 interceptionByPassDepth(regularSeasonStatsFinal)
-            elif secondPrompt == "3":
+            elif efficiencyDropDownTwo.get() == "Run game efficiency":
                 interceptionResultsWithRunGameEfficiency(regularSeasonStatsFinal, playsData, gameid)
             else:
                 print("Wrong input selected")
-        elif firstPrompt=="2":
-            secondPrompt = input("Completion Efficency based on 1. Down? 2. Pass Depth? 3. Run game efficiency? (Select 1,2,3) ")
-            if secondPrompt == "1":
+        elif efficiencyDropDown.get()=="Completion Efficency":
+            if efficiencyDropDownTwo.get() == "Down":
                 completionByDown(regularSeasonStatsFinal)
-            elif secondPrompt == "2":
+            elif efficiencyDropDownTwo.get() == "Pass Depth":
                 completionByPassDepth(regularSeasonStatsFinal)
-            elif secondPrompt == "3":
+            elif efficiencyDropDownTwo.get() == "Run game efficiency":
                 completionResultsWithRunGameEfficiency(regularSeasonStatsFinal, playsData, gameid)
             else:
                 print("Wrong input selected")
         else:
             print("Wrong input selected")
         break
-        
-if __name__== "__main__":
-   main() 
+
+retrieveData = Button(root, text="Retrieve results", command=lambda: main())
+retrieveData.place(x = 175, y = 175)
+root.mainloop()        
 
 
 
